@@ -1,0 +1,397 @@
+/* Existing CSS from GC.css */
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+}
+
+.center-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+#devices {
+    border: 1px solid black;
+    padding: 10px;
+    width: 300px;
+    height: 300px;
+    overflow: auto;
+}
+
+/* New styles moved from NewGC.html */
+.device {
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    transition: all 0.3s;
+    position: relative;
+    width: auto;
+}
+
+.device-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.device-name, .status, .connect-button {
+    margin-right: 10px;
+}
+
+.remove-button {
+    background-color: #fc6d4dd9;
+    color: white;
+    border: none;
+    border-radius: 70%;
+    width: 30px;
+    height: 20px;
+    cursor: pointer;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button-container {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-around;
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 50px;
+}
+
+.global-input-container {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    border-radius: 5px;
+    align-items: center;
+    gap: 10px;
+}
+
+.input-button-container {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.data-transfer-status {
+    margin-top: 5px;
+    font-style: italic;
+    display: block;
+    color: #ff5733;
+}
+
+.data-transfer-status.active {
+    color: green;
+}
+
+span, button {
+    cursor: pointer;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #006adbb8;
+    color: white;
+    font-size: 16px;
+    transition: background-color 0.3s, transform 0.3s;
+    white-space: nowrap;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+input[type="text"], input[type="email"], input[type="date"] {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.6);
+    color: black;
+}
+
+body {
+    background-image: url('background.jpg');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center center;
+    background-repeat: no-repeat;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 36px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.loader {
+    border: 16px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 16px solid #3498db;
+    width: 80px;
+    height: 80px;
+    animation: spin 2s linear infinite;
+    display: none;
+    margin-top: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#devices {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: auto;
+    max-width: 100%;
+    min-height: 100px;
+    min-width: 300px;
+}
+
+#devices.empty {
+    min-height: 100px;
+    min-width: 300px;
+}
+
+.page {
+    position: absolute;
+    width: 100vw;
+    height: 100vh;
+    transition: transform 0.5s ease;
+}
+
+#page1 {
+    background-color: transparent;
+    transform: translateX(0);
+}
+
+/* #page2 {
+    background-color: rgba(0, 0, 0, 0.8);
+    transform: translateX(100%);
+} */
+
+#connected-devices {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+#connected-devices span {
+    padding: 5px 10px;
+    border: 1px solid white;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.device-info {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid white;
+    border-radius: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    width: 90%;
+    margin-left: 5%;
+}
+
+.info-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    cursor: pointer;
+    z-index: 1000;
+    width: 50px;
+    height: 50px;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+.info-button:hover {
+    transform: scale(1.1);
+    opacity: 0.8;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    transition: opacity 0.3s ease;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
+}
+
+.modal.hide {
+    opacity: 0;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    color: black;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid #888;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    top: 10px;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-body {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.modal-body label {
+    font-size: 12px;
+    margin-bottom: 3px;
+}
+
+.modal-body form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="email"],
+.modal-body input[type="date"] {
+    width: 100%;
+    padding: 5px;
+    margin-bottom: 5px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal-body button {
+    background-color: #006adbb8;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.modal-body button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+#personalInfoFormModal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 1001;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8); /* Semi-transparent background */
+    justify-content: center;
+    align-items: flex-start; /* Keep it aligned at the top */
+    padding: 20px;
+    transition: opacity 0.3s ease;
+}
+
+#personalInfoFormModal .modal-content {
+    background-color: #fefefe;
+    color: black;
+    margin: 0;
+    padding: 10px;
+    border: 1px solid #888;
+    width: 100%;
+    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    top: 10px;
+}
+
+#saveOrDiscardModal .modal-content {
+    background-color: #fefefe;
+    color: black;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 100%;
+    max-width: 300px; /* Slightly smaller modal */
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+}
+
+#saveOrDiscardModal .button-container {
+    display: flex; /* Use flexbox to align buttons */
+    justify-content: center; /* Center buttons horizontally */
+    gap: 10px; /* Add space between the buttons */
+    margin-top: 20px; /* Add some margin to the top of the buttons */
+}

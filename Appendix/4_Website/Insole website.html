@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Bluetooth</title>
+    <link rel="stylesheet" type="text/css" href="GC.css">
+</head>
+<body>
+    <img src="login.jpg" alt="Info" class="info-button" onclick="openModal()">
+    <div id="personalInfoFormModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Personal Detail</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="personalInfoForm">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name" name="name">
+                    <label for="birthdate">Date of birth:</label>
+                    <input type="date" id="birthdate" name="birthdate">
+                    <label for="gender">Gender:</label>
+                    <input type="text" id="gender" name="gender">
+                    <label for="height">High:</label>
+                    <input type="text" id="height" name="height">
+                    <label for="weight">Weight:</label>
+                    <input type="text" id="weight" name="weight">
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email">
+                    <label for="phone">Phone Number:</label>
+                    <input type="text" id="phone" name="phone">
+                    <label for="address">Address:</label>
+                    <input type="text" id="address" name="address">
+                    <button type="button" onclick="submitPersonalInfo()">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="saveOrDiscardModal" class="modal">
+        <div class="modal-content">
+            <h2>Save or Discard Data?</h2>
+            <p>You have unsaved data. Save or discard it?</p>
+            <div class="button-container">
+                <button onclick="saveDataAndResume()">Save</button>
+                <button onclick="discardDataAndResume()">Discard</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="page1" class="page">
+        <h1>Web Bluetooth</h1>
+        <div class="center-container">
+            <div class="button-container">
+                <button onclick="search()">Search Bluetooth Devices</button>
+                <button id="recordData" onclick="toggleRecording()">Record Data</button>
+                <!-- <button onclick="saveData()">Save Data</button> -->
+            </div>
+            <div id="devices" class="empty"></div>
+            <div class="global-input-container">
+                <input type="text" id="globalInput" placeholder="Enter a message to send to all connected devices">
+                <div class="input-button-container">
+                    <button onclick="sendGlobalMessage()">Sent</button>
+                    <button onclick="syncTime()">Calibrate Time</button>
+                    <button onclick="disconnectAll()">Disconnect All</button>
+                </div>
+            </div>
+            <div class="loader" id="loader"></div>
+        </div>
+    </div>
+    <div id="page2" class="page" style="display: none;">
+        <div id="connected-devices"></div>
+        <div id="device-info" class="device-info"></div>
+    </div>
+
+    <script>
+        var devices = {};
+        var isRecording = false;
+        var dataSaved = true;  // Flag to track if data has been saved
+        var loader = document.getElementById('loader');
+        var startX;
+        var personalInfo = {};
+        var SeqValue_last = -1;
+
+        // Personal information login Model functions
+        function openModal() {
+            var modal = document.getElementById('personalInfoFormModal');
+            modal.style.display = 'flex'; // Make sure it matches the display used in CSS
+        }
+
+        function closeModal() {
+            var modal = document.getElementById('personalInfoFormModal');
+            modal.style.display = 'none'; // Hide the modal
+        }
+
+        function submitPersonalInfo() {
+            // Get the value of the name field and trim any extra spaces
+            const name = document.getElementById('name').value.trim();
+
+            // Check if the name field is filled
+            if (!name) {
+                alert("Please fill in your name.");
+                return; // Stop execution if the name is not filled
+            }
+
+            // Collect all form data into the personalInfo object
+            const form = document.getElementById('personalInfoForm');
+            const formData = new FormData(form);
+            formData.forEach((value, key) => {
+                personalInfo[key] = value;
+            });
+
+            // Update saved personal info in each connected device
+            for (let key in devices) {
+                if (devices[key].data.length > 0) {
+                    devices[key].data[0] = [formatPersonalInfo()];
+                }
+            }
+
+            // Log the personal info to the console (for debugging or verification)
+            console.log('Personal Info:', personalInfo);
+
+            // Close the modal after successful submission
+            closeModal();
+        }
+
+        function clearPersonalInfo() {
+            personalInfo = {};
+        };
+
+        function formatPersonalInfo() {
+            return [
+                "Name", "Email", "Phone Number", "Address", "Date of birth", "Gender", "High", "Weight"
+            ].join(",") + "\n" + [
+                personalInfo.name || '', 
+                personalInfo.email || '', 
+                personalInfo.phone || '', 
+                personalInfo.address || '', 
+                personalInfo.birthdate || '', 
+                personalInfo.gender || '', 
+                personalInfo.height || '', 
+                personalInfo.weight || ''
+            ].join(",");
+        }
+
+        function savePersonalInfoCSV() {
+            // Prepare the filename with current date and time
+            const dateTime = getFormattedDateTime();
+            const fileName = `Mega_${dateTime}.csv`;
+
+            // Prepare the header for the CSV file
+            let csvContent = 'DeviceName,Name,Email,Phone Number,Address,Date of Birth,Gender,Height,Weight\n';
+            console.log("Devices object:", devices);
+            // Loop through all devices and add the personal information for each device
+            for (let key in devices) {
+                // Append each device's name and personal info values to the CSV content
+                csvContent += `${key},${personalInfo.name || ''},${personalInfo.email || ''},${personalInfo.phone || ''},${personalInfo.address || ''},${personalInfo.birthdate || ''},${personalInfo.gender || ''},${personalInfo.height || ''},${personalInfo.weight || ''}\n`;
+            }
+
+            // Create a downloadable CSV file
+            const bom = '\uFEFF';  // Add BOM for UTF-8
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + bom + csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", fileName);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            console.log("Personal info CSV saved successfully as:", fileName);
+        }
+
+        // Function to close the modal
+        function closeModal1() {
+            const modal = document.getElementById('saveOrDiscardModal');
+            modal.style.display = 'none'; // Hide the modal
+        }
+
+        // Main page, search bluetooth device button functions
+        function showLoader() {
+            loader.style.display = 'block';
+        }
+
+        function hideLoader() {
+            loader.style.display = 'none';
+        }
+
+        function search() {
+            showLoader();
+            navigator.bluetooth.requestDevice({ 
+                filters: [{ services: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e'] }]
+            })
+            .then(device => {
+                hideLoader();
+                if (devices[device.name]) {
+                    console.log('Device ' + device.name + ' is already in the list.');
+                    return;
+                }
+
+                var deviceElement = document.createElement('div');
+                deviceElement.className = 'device';
+
+                var deviceHeader = document.createElement('div');
+                deviceHeader.className = 'device-header';
+
+                var deviceName = document.createElement('span');
+                deviceName.textContent = device.name;
+                deviceName.className = 'device-name';
+
+                var connectButton = document.createElement('button');
+                connectButton.textContent = 'Connect';
+                connectButton.className = 'connect-button disconnected';
+
+                var statusSpan = document.createElement('span');
+                statusSpan.textContent = 'Unconnected';
+                statusSpan.className = 'status';
+
+                var removeButton = document.createElement('button');
+                removeButton.textContent = 'X';
+                removeButton.className = 'remove-button';
+                removeButton.onclick = function() {
+                    removeDevice(device.name);
+                };
+
+                deviceHeader.appendChild(deviceName);
+                deviceHeader.appendChild(connectButton);
+                deviceHeader.appendChild(statusSpan);
+                deviceHeader.appendChild(removeButton);
+
+                var dataTransferStatus = document.createElement('span');
+                dataTransferStatus.className = 'data-transfer-status';
+                dataTransferStatus.textContent = 'No data transmission';
+
+                deviceElement.appendChild(deviceHeader);
+                deviceElement.appendChild(dataTransferStatus);
+                document.getElementById('devices').appendChild(deviceElement);
+
+                devices[device.name] = {
+                    device: device,
+                    data: [],
+                    element: deviceElement,
+                    dataTransferStatus: dataTransferStatus,
+                    characteristic: null
+                };
+
+                connectButton.onclick = function() {
+                    connect(device, connectButton);
+                };
+                adjustDevicesContainerHeight();
+                updateDevicesContainerStatus();
+            })
+            .catch(error => { 
+                hideLoader();
+                console.log(error); 
+            });
+        }
+
+        function connect(device, button) {
+            showLoader();
+            console.log('Connecting to GATT Server...');
+            device.gatt.connect()
+            .then(server => {
+                return server.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e');
+            })
+            .then(service => {
+                return service.getCharacteristic('6e400003-b5a3-f393-e0a9-e50e24dcca9e');
+            })
+            .then(characteristic => {
+                hideLoader();
+                console.log('Connected to ' + device.name);
+                button.textContent = 'Disconnect';
+                button.classList.add('connected');
+                button.classList.remove('disconnected');
+                var statusSpan = devices[device.name].element.querySelector('.status');
+                statusSpan.textContent = 'Connected';
+                button.onclick = function() {
+                    disconnect(device, button);
+                };
+
+                characteristic.startNotifications().then(_ => {
+                    characteristic.addEventListener('characteristicvaluechanged', event => handleData(event, device.name));
+                });
+
+                devices[device.name].characteristic = characteristic;
+                updateConnectedDevices();
+            })
+            .catch(error => {
+                hideLoader();
+                console.log(error);
+                button.textContent = 'Connect';
+                button.classList.add('disconnected');
+                button.classList.remove('connected');
+                var statusSpan = devices[device.name].element.querySelector('.status');
+                statusSpan.textContent = 'Disconnected';
+                alert('Failed to connect: ' + error.message);
+            });
+        }
+
+        // Main page, disconnect devices
+        function disconnect(device, button) {
+            console.log('Disconnecting from ' + device.name);
+            // Send stop message to device
+            sendStop();
+
+            // Only stop notifications and disconnect if the device is connected
+            if (device.gatt.connected) {
+                if (devices[device.name].characteristic) {
+                    devices[device.name].characteristic.stopNotifications().catch(error => {
+                        console.log("Error stopping notifications:", error);
+                    });
+                    devices[device.name].characteristic.removeEventListener('characteristicvaluechanged', event => handleData(event, device.name));
+                }
+                // Now disconnect the device
+                device.gatt.disconnect();
+            } else {
+                console.log('Device is already disconnected, skipping GATT operations.');
+            }
+
+            // Update the device status to disconnected regardless
+            updateDeviceStatus(device);
+        }
+
+        function disconnectAll() {
+            for (let key in devices) {
+                if (devices[key].device.gatt.connected) {
+                    disconnect(devices[key].device, devices[key].element.querySelector('.connect-button'));
+                }
+            }
+        }
+
+        function removeDevice(deviceName) {
+            var device = devices[deviceName];
+
+            if (device) {
+                var statusSpan = device.element.querySelector('.status');
+
+                // If the device is unconnected or already disconnected
+                if (statusSpan.textContent === 'Unconnected' || statusSpan.textContent === 'Disconnect') {
+                    // Remove the device from the UI and the devices object
+                    device.element.remove();
+                    delete devices[deviceName];
+                    updateDevicesContainerStatus();
+                    updateConnectedDevices();
+                    console.log('Device removed:', deviceName);
+                } else if (device.gatt && device.gatt.connected) {
+                    // If the device is connected, disconnect it first
+                    console.log('Device is connected, attempting to disconnect...');
+
+                    // Add an event listener for disconnection and then remove the device
+                    device.gatt.disconnect();
+
+                    device.addEventListener('gattserverdisconnected', () => {
+                        console.log('Device has been disconnected:', deviceName);
+
+                        // Now remove the device after it is fully disconnected
+                        device.element.remove();
+                        delete devices[deviceName];
+                        updateDevicesContainerStatus();
+                        updateConnectedDevices();
+                        console.log('Device removed after disconnection:', deviceName);
+                    });
+                } else {
+                    // If the device is already disconnected or couldn't disconnect, remove it
+                    console.error('Unable to disconnect device, but trying to remove it');
+                    device.element.remove();  // Remove the device even if there was an error
+                    delete devices[deviceName];
+                    updateDevicesContainerStatus();
+                    updateConnectedDevices();
+                }
+            } else {
+                console.error('Device not found:', deviceName);
+            }
+        }
+        
+        // Main page, device status
+        function adjustDevicesContainerHeight() {
+            const devicesContainer = document.getElementById('devices');
+            devicesContainer.style.height = 'auto';
+            const devicesHeight = devicesContainer.offsetHeight;
+            devicesContainer.style.height = `${devicesHeight}px`;
+        }
+
+        function updateDevicesContainerStatus() {
+            const devicesContainer = document.getElementById('devices');
+            if (Object.keys(devices).length === 0) {
+                devicesContainer.classList.add('empty');
+            } else {
+                devicesContainer.classList.remove('empty');
+            }
+        }
+
+        function updateConnectedDevices() {
+            const connectedDevicesContainer = document.getElementById('connected-devices');
+            connectedDevicesContainer.innerHTML = '';
+
+            Object.keys(devices).forEach(deviceName => {
+                if (devices[deviceName].device.gatt.connected) {
+                    const deviceSpan = document.createElement('span');
+                    deviceSpan.textContent = deviceName;
+                    deviceSpan.onclick = function() {
+                        toggleDeviceInfo(deviceName);
+                    };
+                    connectedDevicesContainer.appendChild(deviceSpan);
+                }
+            });
+        }
+
+        function toggleDeviceInfo(deviceName) {
+            const deviceInfoContainer = document.getElementById('device-info');
+            if (deviceInfoContainer.dataset.deviceName === deviceName) {
+                // Hide same device
+                deviceInfoContainer.innerHTML = '';
+                delete deviceInfoContainer.dataset.deviceName;
+            } else {
+                // Display new device
+                const deviceData = devices[deviceName].data;
+                deviceInfoContainer.innerHTML = `<h2>${deviceName} Data</h2>`;
+                if (deviceData.length === 0) {
+                    deviceInfoContainer.innerHTML += '<p>No available data</p>';
+                } else {
+                    deviceData.forEach(dataEntry => {
+                        const dataDiv = document.createElement('div');
+                        dataDiv.textContent = `${dataEntry[0]}: ${dataEntry[1]}`;
+                        deviceInfoContainer.appendChild(dataDiv);
+                    });
+                }
+                deviceInfoContainer.dataset.deviceName = deviceName;
+            }
+        }
+
+        // Main page, send message to device
+        function sendGlobalMessage() {
+            var message = document.getElementById('globalInput').value;
+            for (let key in devices) {
+                if (devices[key].device.gatt.connected) {
+                    sendDataToDevice(devices[key].device, message);
+                }
+            }
+        }
+
+        function syncTime() {
+            var currentTime = getFormattedDateTime();
+            for (let key in devices) {
+                if (devices[key].device.gatt.connected) {
+                    sendDataToDevice(devices[key].device, currentTime);
+                }
+            }
+        }
+
+        function getFormattedDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            const day = now.getDate().toString().padStart(2, '0');
+            const hours = now.getHours().toString().padStart(2, '0');
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            const seconds = now.getSeconds().toString().padStart(2, '0');
+            return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        function sendStop() {
+            var stopMessage = 'stop_sampling';
+            for (let key in devices) {
+                if (devices[key].device.gatt.connected) {
+                    sendDataToDevice(devices[key].device, stopMessage);
+                }
+            }
+        }
+
+        function sendDataToDevice(device, data) {
+            device.gatt.getPrimaryService('6e400001-b5a3-f393-e0a9-e50e24dcca9e')
+            .then(service => {
+                return service.getCharacteristic('6e400002-b5a3-f393-e0a9-e50e24dcca9e');
+            })
+            .then(characteristic => {
+                let encoder = new TextEncoder();
+                let dataArray = encoder.encode(data);
+                return characteristic.writeValue(dataArray);
+            })
+            .then(_ => {
+                console.log('Sent data to ' + device.name);
+            })
+            .catch(error => { console.log(error); });
+        }
+
+        // Main page, data receive from device
+        function updateDeviceStatus(device) {
+            var statusSpan = devices[device.name].element.querySelector('.status');
+            statusSpan.textContent = 'Disconnected';
+            var connectButton = devices[device.name].element.querySelector('.connect-button');
+            connectButton.textContent = 'Connect';
+            connectButton.classList.add('disconnected');
+            connectButton.classList.remove('connected');
+            connectButton.onclick = function() {
+                connect(device, connectButton);
+            };
+            devices[device.name].dataTransferStatus.textContent = 'No data transmission';
+            devices[device.name].dataTransferStatus.classList.remove('active');
+
+            var inputContainer = devices[device.name].element.querySelector('.input-container');
+            if (inputContainer) {
+                inputContainer.style.display = 'none';
+            }
+            adjustDevicesContainerHeight();
+            updateConnectedDevices();
+        }
+
+        function handleData(event, deviceName) {
+            if (devices[deviceName]) {
+                var byteArray = new Uint8Array(event.target.value.buffer);
+                var decodedData = decodeByteStream(byteArray);
+
+                if (decodedData) {
+                    devices[deviceName].dataTransferStatus.textContent = 'This device is transmitting data';
+                    devices[deviceName].dataTransferStatus.classList.add('active');
+
+                    // Clear any existing timeout for this device
+                    if (devices[deviceName].dataTimeout) {
+                        clearTimeout(devices[deviceName].dataTimeout);
+                    }
+
+                    // Set a timeout to change status to 'No data transmission' after 1 second
+                    devices[deviceName].dataTimeout = setTimeout(() => {
+                        devices[deviceName].dataTransferStatus.textContent = 'No data transmission';
+                        devices[deviceName].dataTransferStatus.classList.remove('active');
+                    }, 1000);
+
+                    // If we are recording, store the data
+                    if (isRecording) {
+                        devices[deviceName].data.push(decodedData);
+                    }
+
+                    // Check the status of the Save Data button
+                    checkSaveButtonStatus();
+                }
+            }
+        }
+
+        function checkSaveButtonStatus() {
+            const saveButton = document.getElementById('saveData');
+            let hasValidData = false;
+
+            // Check if any device has data in cache
+            for (let key in devices) {
+                if (devices[key].data.length > 0) {
+                    hasValidData = true;
+                    break;
+                }
+            }
+        }
+
+        function decodeByteStream(byteStream) {
+            var index = 0;
+            var packTime = 5;
+            var deviceName = '';
+
+            // Decode the device name
+            while (byteStream[index] !== 44) { // ASCII code for comma (,)
+                deviceName += String.fromCharCode(byteStream[index]);
+                index += 1;
+            }
+            index += 1; // Skip the delimiter
+
+            var miliBuffer = [];
+            var sensorBuffer = [];
+            var fsrBuffer = [];
+
+            // Decode miliBuffer values (32-bit integers)
+            for (var i = 0; i < packTime; i++) {
+                var value = (byteStream[index] << 24) | (byteStream[index + 1] << 16) | (byteStream[index + 2] << 8) | byteStream[index + 3];
+                miliBuffer.push(value);
+                index += 4;
+            }
+
+            // Decode sensorBuffer values (16-bit integers)
+            for (var i = 0; i < 6 * packTime; i++) {
+                var value = (byteStream[index] << 8) | byteStream[index + 1];
+                if (value & 0x8000) { // If sign bit is set (16-bit: 32768-65535)
+                    value = -((value ^ 0xFFFF) + 1); // 2's complement sign conversion
+                }
+                sensorBuffer.push(value);
+                index += 2;
+            }
+
+            // Decode fsrBuffer values (16-bit integers)
+            for (var i = 0; i < 16 * packTime; i++) {
+                var value = (byteStream[index] << 8) | byteStream[index + 1];
+                if (value & 0x8000) { // If sign bit is set (16-bit: 32768-65535)
+                    value = -((value ^ 0xFFFF) + 1); // 2's complement sign conversion
+                }
+                fsrBuffer.push(value);
+                index += 2;
+            }
+
+            return {
+                deviceName: deviceName,
+                miliBuffer: miliBuffer,
+                sensorBuffer: sensorBuffer,
+                fsrBuffer: fsrBuffer
+            };
+        }
+
+        function saveData() {
+            let hasData = false;
+            const dateTime = getFormattedDateTime();
+            const bom = '\uFEFF'; // Add BOM for UTF-8
+            const name = document.getElementById('name').value.trim();
+
+            for (let key in devices) {
+                if (devices[key].data.length > 0) {
+                    hasData = true;
+                    try {
+                        const csvContent = generateCSV(devices[key].data);
+                        const encodedUri = encodeURI("data:text/csv;charset=utf-8," + bom + csvContent);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", encodedUri);
+                        link.setAttribute("download", `${key}_${name}_${dateTime}.csv`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    } catch (error) {
+                        console.error("Error generating or downloading CSV:", error);
+                        alert("Failed to save data. Check the console for errors.");
+                        return;
+                    }
+                }
+            }
+
+            if (!hasData) {
+                alert("No data to save");
+            }
+
+            // Clear the data to ensure new recordings start fresh
+            for (let key in devices) {
+                devices[key].data = [];
+            }
+
+            // Call the function to save personal info as a CSV file
+            savePersonalInfoCSV(); 
+
+            clearPersonalInfo();
+            document.getElementById('personalInfoForm').reset();
+            dataSaved = true;
+        }
+
+        function generateCSV(dataArray) {
+            try {
+                let csvRows = [];
+                // CSV Header
+                csvRows.push(['Device Name', 'miliBuffer'].concat(Array.from({ length: 6 }, (_, i) => `sensorBuffer_${i + 1}`)).concat(Array.from({ length: 16 }, (_, i) => `fsrBuffer_${i + 1}`)).join(','));
+
+                // CSV Rows
+                dataArray.forEach((data, index) => {
+                    if (!data || !data.miliBuffer || !data.sensorBuffer || !data.fsrBuffer) {
+                        console.error(`Missing data properties at index ${index}:`, data);
+                        // Instead of throwing an error, we continue to the next entry
+                        return;
+                    }
+
+                    for (let i = 0; i < data.miliBuffer.length; i++) {
+                        let row = [
+                            data.deviceName || '',
+                            data.miliBuffer[i] || 0,
+                            ...data.sensorBuffer.slice(i * 6, (i + 1) * 6).map(val => val || 0),
+                            ...data.fsrBuffer.slice(i * 16, (i + 1) * 16).map(val => val || 0)
+                        ];
+                        csvRows.push(row.join(','));
+                    }
+                });
+
+                return csvRows.join('\n');
+            } catch (error) {
+                console.error("Error generating CSV content:", error);
+                throw error;
+            }
+        }
+
+        function toggleRecording() {
+            if (isRecording) {
+                // Send "stop_sampling" to all connected devices but do not immediately stop recording
+                for (let key in devices) {
+                    if (devices[key].device.gatt.connected) {
+                        sendDataToDevice(devices[key].device, "stop_sampling");
+                    }
+                }
+                monitorStopRecording();
+                return;
+            }
+
+            // Existing logic for starting the recording
+            if (!isRecording && !dataSaved) {
+                openSaveOrDiscardModal();
+                return;
+            }
+
+            const name = document.getElementById('name').value.trim();
+            if (!name) {
+                alert("Please fill in your name.");
+                openModal();
+                return;
+            }
+
+            syncTime();
+            startRecording();
+        }
+        // @@@ not used @@@
+        function allDevicesStoppedReceivingData() {
+            // Check if all devices have stopped receiving data
+            for (let key in devices) {
+                if (devices[key].dataTransferStatus.classList.contains('active')) {
+                    return false; // Still receiving data from at least one device
+                }
+            }
+            return true;
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            document.getElementById('recordData').textContent = "Record Data";
+            checkSaveButtonStatus(); // Update the Save Data button status
+            saveData(); // Automatically save data once recording has fully stopped
+        }
+
+        function monitorStopRecording() {
+            // Check every 500ms if all devices have stopped transmitting data.
+            var monitorInterval = setInterval(() => {
+                let allStopped = true;
+                for (let key in devices) {
+                    // Check if the device's status text indicates "No data transmission"
+                    if (devices[key].dataTransferStatus.textContent.trim() !== "No data transmission") {
+                        allStopped = false;
+                        break;
+                    }
+                }
+                if (allStopped) {
+                    clearInterval(monitorInterval);
+                    finalizeStopRecording();
+                }
+            }, 500);
+        }
+
+        function finalizeStopRecording() {
+            // Now that no device is transmitting, update the UI and save data.
+            isRecording = false;
+            document.getElementById('recordData').textContent = "Record Data";
+            checkSaveButtonStatus(); // Update the Save Data button status
+            saveData(); // Automatically save data once recording has fully stopped
+        }
+
+        function startRecording() {
+            // Clear the data cache for each device at the start of a new recording session
+            for (let key in devices) {
+                devices[key].data = [];
+            }
+            isRecording = true;
+            dataSaved = false;  // Reset the flag since new data is being recorded
+            document.getElementById('recordData').textContent = "Stop Record";
+            // Additional logic to handle the start of recording if necessary
+        }
+
+        // Function to handle the Save/Discard modal
+        function openSaveOrDiscardModal() {
+            // Open a custom modal for saving or discarding the data
+            const modal = document.getElementById('saveOrDiscardModal');
+            modal.style.display = 'flex'; // Make sure it matches the display used in CSS
+        }
+
+        // Function to save data (triggered by the Save button in the modal)
+        function saveDataAndResume() {
+            saveData();  // Save the data
+            dataSaved = true;  // Mark data as saved
+            closeModal1();  // Close the modal
+            // Do not automatically start recording again; wait for the user to press the button
+        }
+
+        function discardDataAndResume() {
+            // Clear the data stored in memory (RAM)
+            for (let key in devices) {
+                devices[key].data = [];  // Clear all recorded data
+            }
+            dataSaved = true;  // Mark data as saved (since we discarded it)
+            closeModal1();  // Close the modal
+            // Do not automatically start recording again; wait for the user to press the button
+        }
+
+        // Function to resume recording
+        function resumeRecording() {
+            isRecording = true;
+            document.getElementById('recordData').textContent = "Stop Record";
+        }
+
+
+    </script>
+</body>
+</html>
