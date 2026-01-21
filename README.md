@@ -4,6 +4,7 @@ Thesis appendix repository including Python scripts for data preprocessing, deep
 Thesis Appendix Repository: Smart Insole System, Data Processing, and Deep Learning for Plantar Pressure Analysis
 
 Description:
+
 This repository contains the complete codebase and hardware design files used in the appendix of my thesis. It supports the development, data processing, and evaluation of a smart insole system for plantar pressure analysis and gait-related research. The repository integrates data preprocessing pipelines, deep learning models, embedded firmware, visualization tools, and hardware design files, ensuring full reproducibility of the experimental methods and system implementation described in the thesis.
 
 Contents include:
