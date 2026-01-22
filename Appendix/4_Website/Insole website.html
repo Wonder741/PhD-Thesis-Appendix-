@@ -1,3 +1,33 @@
+<!--
+================================================================================
+Project: Web Bluetooth Data Collection Interface for Smart Insole System
+
+Description:
+This code implements a browser-based Web Bluetooth interface for connecting to
+multiple smart insole devices simultaneously. It provides functionalities for:
+
+- Discovering and connecting to BLE devices using a specified Nordic UART service
+- Real-time data reception via BLE notifications
+- Decoding streamed binary data (timestamp, IMU data, and FSR sensor data)
+- Recording, monitoring, and managing data transmission states
+- Synchronizing device time with the host system
+- Managing participant personal information via a modal form
+- Automatically exporting recorded sensor data and participant metadata as CSV
+- Supporting multi-device operation, safe start/stop recording, and data integrity
+
+The interface is designed for gait analysis and plantar pressure data collection
+in biomechanics and medical research applications.
+
+Collaboration & Contribution:
+This code was developed collaboratively by Wei and Chongguang (me).
+Wei contributed approximately 70% of the implementation, including the core
+Bluetooth communication logic and data handling mechanisms.
+The remaining parts, including system integration, UI logic, data management,
+and overall coordination, were contributed by me.
+
+================================================================================
+-->
+
 <!DOCTYPE html>
 <html>
 <head>
