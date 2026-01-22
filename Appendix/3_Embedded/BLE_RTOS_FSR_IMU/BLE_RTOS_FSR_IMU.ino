@@ -1,3 +1,81 @@
+/*
+File: BLE_RTOS_FSR_IMU.ino
+
+Description
+-----------
+This firmware implements a real-time data acquisition and Bluetooth Low Energy (BLE)
+transmission system for a smart insole device using FreeRTOS.
+
+The system integrates:
+  - Multiple FSR (Force Sensitive Resistor) sensors for plantar pressure measurement
+  - An IMU (Inertial Measurement Unit) for foot motion tracking
+  - BLE communication for wireless data streaming to a host device
+
+The firmware uses FreeRTOS tasks to separate sensing, buffering, and BLE transmission,
+ensuring stable timing and minimizing data loss during real-time operation.
+
+System Architecture
+-------------------
+The program runs multiple RTOS tasks in parallel, including:
+  1) FSR sampling task
+     - Reads analog values from FSR sensors
+     - Applies basic preprocessing (e.g., scaling or filtering)
+  2) IMU sampling task
+     - Reads accelerometer and gyroscope data via I2C/SPI
+  3) BLE transmission task
+     - Packages sensor data into a compact byte stream
+     - Sends data over BLE at a controlled rate
+  4) Optional receive/control task
+     - Handles incoming BLE commands (e.g., start/stop, configuration)
+
+Sensor data are written into a shared buffer, and the BLE task reads from this buffer
+to transmit data without blocking sensor sampling.
+
+Sampling Frequency Control
+--------------------------
+The overall sampling frequency is controlled by the parameter `baseFrequency`.
+
+Empirically determined behavior:
+  - baseFrequency = 1  → approximately 49 Hz sampling rate
+  - baseFrequency = 2  → approximately 32 Hz sampling rate
+
+This parameter adjusts the RTOS task timing and directly affects the achievable
+sensor sampling frequency and BLE transmission stability. Lower values increase
+sampling frequency but may increase the risk of BLE packet loss.
+
+Data Handling
+-------------
+- Sensor data are transmitted in binary format to reduce packet size
+- Transmission rate is limited to avoid BLE packet loss
+- Buffer management prevents overwriting unsent data
+- Timing is controlled using RTOS delays instead of blocking loops
+
+BLE Communication
+-----------------
+- BLE is used in UART-like mode
+- Data packets contain synchronized FSR and IMU samples
+- Designed for real-time streaming rather than onboard storage
+
+Intended Use
+------------
+This firmware is intended for:
+  - Smart insole development
+  - Gait analysis and plantar pressure research
+  - Wearable motion and pressure monitoring
+  - Experimental data collection in laboratory or clinical settings
+
+Notes
+-----
+- Sampling rate and BLE throughput must be balanced to prevent data loss
+- EMI and wireless interference may affect BLE reliability in clinical environments
+- The code is structured for extensibility (e.g., adding SD card logging)
+
+Author / Maintenance
+--------------------
+- Designed for research and prototyping
+- Modify task priorities, buffer sizes, and baseFrequency with care
+*/
+
 #include <LSM6DS3.h>
 #include <RTClib.h>
 #include <bluefruit.h>
@@ -491,4 +569,5 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
   digitalWrite(LED_RED, HIGH);
   digitalWrite(LED_GREEN, HIGH);
 }
+
 
