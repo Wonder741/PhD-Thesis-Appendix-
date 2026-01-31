@@ -1,4 +1,4 @@
-# PhD-Thesis-Appendix-
+# PhD-Thesis-Appendix-A
 Thesis appendix repository including Python scripts for data preprocessing, deep learning training, and visualization; C++ firmware for Seeed XIAO nRF52840 Sense; HTML/JavaScript BLE receiver; Altium Designer schematic and PCB files for a smart insole system, and CAD files for insole and sensor position.
 
 Thesis Appendix Repository: Smart Insole System, Data Processing, and Deep Learning for Plantar Pressure Analysis
