@@ -1,5 +1,5 @@
 # PhD-Thesis-Appendix-
-Thesis appendix repository including Python scripts for data preprocessing, deep learning training, and visualization; C++ firmware for Seeed XIAO nRF52840 Sense; HTML/JavaScript BLE receiver; and Altium Designer schematic and PCB files for a smart insole system.
+Thesis appendix repository including Python scripts for data preprocessing, deep learning training, and visualization; C++ firmware for Seeed XIAO nRF52840 Sense; HTML/JavaScript BLE receiver; Altium Designer schematic and PCB files for a smart insole system, and CAD files for insole and sensor position.
 
 Thesis Appendix Repository: Smart Insole System, Data Processing, and Deep Learning for Plantar Pressure Analysis
 
@@ -31,5 +31,9 @@ Supports analysis and interpretation of sensor measurements
 6. Hardware design files
 Altium Designer schematic (.SchDoc) and PCB layout (.PcbDoc) files
 Custom smart insole control board design
+
+7. Insole design files
+CAD file for insole edge
+Sensor potion file
 
 This repository is intended for research reproducibility, methodological transparency, and future extension of smart insole–based plantar pressure analysis systems.
